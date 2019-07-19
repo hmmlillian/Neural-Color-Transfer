@@ -1,15 +1,15 @@
-# Neural-Color-Transfer
+# Neural Color Transfer
 
 This is the implementation of single-reference color transfer proposed in the paper [**Progressive Color Transfer with Dense Semantic Correspondences**](https://arxiv.org/abs/1807.06587) by [Mingming He](http://mingminghe.com/), [Jing Liao](https://liaojing.github.io/html/index.html), [Dongdong Chen](http://www.dongdongchen.bid/), [Lu Yuan](http://www.lyuan.org/) and [Pedro V. Sander](http://www.cse.ust.hk/~psander/) in ACM Transactions on Graphics (2019).
 
 
 ## Introduction
 
-**Neural-Color-Transfer** is a progressive color transfer framework,which jointly optimizes dense semantic correspondencesin the deep feature domain and the local color transfer inthe image domain.
+**Neural Color Transfer** is a progressive color transfer framework, which jointly optimizes dense semantic correspondencesin the deep feature domain and the local color transfer inthe image domain.
 
 Given two input images (one color source image *S* and one color reference image) which share semantically-related content, but may vary dramatically in appearance or structure, the proposed framework first estimates dense correspondence between them using deep features (extracted from VGG19 at level *L*) and then applies local color transfer to the source image *S* based on the correspondence. The process repeats from high level (*L=5*) to low level (*L=1*).
 
-For more results, please refer to our [Supplementary]().
+For more results, please refer to our [Supplementary](http://mingminghe.com/neural_color_transfer/comparison.html).
 
 
 ## Disclaimer
@@ -49,31 +49,27 @@ We prepare an example under the folder ```demo\``` with:
 - A folder ```input\``` with the input images (color source images and color reference images) inside.
 - A file ```pairs.txt``` to specify a source, a reference and a BDS weight (2.0 as default) as an example in each line, e.g., 
   ```
-  in1.jpg tar1.jpg 2.0
-  in2.jpg tar2.jpg 2.0
-  in3.jpg tar3.jpg 0.0
-  in3.jpg tar3.jpg 1.0
-  in3.jpg tar3.jpg 4.0
+  in/in0.png in/tar0.png 2.0
+  in/in1.png in/tar1.png 2.0
   ...
   ```
 
 (2) Executable script ```run.bat``` including one command:
   ```
   neural_color_transfer.exe -m [MODEL_DIR] -i [INPUT_ROOT_DIR] -o [OUTPUT_DIR] -g [GPU_ID]
-  e.g., exe\neural_color_transfer.exe -m model\deep_image_analogy\ -i example\ -o example\res -g 0
+  e.g., exe\neural_color_transfer.exe -m model\ -i example\ -o example\res\ -g 0
   ```  
 
 ### Run
 We provide pre-built executable files in folder ```demo\exe\```, please try them.
 
 ### Tips
--
--
--
+- The proposed algorithm is more applicable to transfer color between images with semantically-related content.
+- Ajusting the parameter of BDS weight (defined in pairs.txt, regularly in [0, 4]) according to similarity of input images leads to better results if their content are not highly related, smaller value for less similar pair.
 
 
 ## Citation
-If you find **Deep Exemplar-based Colorization** helpful for your research, please consider citing:
+If you find **Neural Color Transfer** helpful for your research, please consider citing:
 ```
 @article{he2019progressive,
   title={Progressive color transfer with dense semantic correspondences},
