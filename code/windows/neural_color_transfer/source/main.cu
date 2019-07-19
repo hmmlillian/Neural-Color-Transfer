@@ -77,15 +77,10 @@ __host__ void transfer_color_single_bds(Mat& refineCS, Classifier& classifier_C,
 	std::vector<int> range;
 	int maxLen = max(max(max(img_content.cols, img_content.rows), img_style.cols), img_style.rows);
 	range.push_back(maxLen / 16);
-	//range.push_back(32);
-	//range.push_back(32);
 	range.push_back(maxLen / 32);
 	range.push_back(maxLen / 64);
 	range.push_back(32);
 	range.push_back(32);
-	//range.push_back(max(maxLen / 128, 8));
-	//range.push_back(max(maxLen / 128, 8));
-	//range.push_back(max(maxLen / 128, 128));
 
 	ColorTransfer colorTransfer(config, img_content);
 
@@ -286,56 +281,45 @@ __host__ void transfer_color_single_bds(Mat& refineCS, Classifier& classifier_C,
 		
 		//cs patchmatch	
 		patchmatch_single << <cur_blocksPerGrid_a, cur_threadsPerBlock_a >> >(Ndata_C1, Ndata_S1, NULL, ann_device, annd_device, params_device_ab);
-		if (bds_wgt <= ZERO_THRESH)
-		{
-			cudaMemcpy(ann_err_host, annd_device, cur_ann_size * sizeof(float), cudaMemcpyDeviceToHost);
-			cudaMemcpy(ann_flow_host, ann_device, cur_ann_size * sizeof(unsigned int), cudaMemcpyDeviceToHost);
-			cudaMemcpy(bds_err_host, annd_device, cur_ann_size * sizeof(float), cudaMemcpyDeviceToHost);
+		patchmatch_single << <cur_blocksPerGrid_b, cur_threadsPerBlock_b >> >(Ndata_S1, Ndata_C1, NULL, bnn_device, bnnd_device, params_device_ba);
 
-			smlRes = reconstruct_avg(down_cnt, down_stl, ann_flow_host, patch_size);
+		cudaMemcpy(ann_err_host, annd_device, cur_ann_size * sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(ann_flow_host, ann_device, cur_ann_size * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+		cudaMemcpy(bnn_flow_host, bnn_device, cur_bnn_size * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+		cudaMemcpy(bnn_err_host, bnnd_device, cur_bnn_size * sizeof(float), cudaMemcpyDeviceToHost);
+
+		smlRes = reconstruct_bds(down_cnt, down_stl, ann_flow_host, bnn_flow_host, patch_size, 1.f, bds_wgt);
+
+		float *vote_Ndata_C1;
+		float *vote_weight;
+		float *copy_Ndata_C1;
+
+		cudaMalloc(&vote_Ndata_C1, cur_num_a * sizeof(float));
+		cudaMalloc(&copy_Ndata_C1, cur_num_a * sizeof(float));
+		cudaMalloc(&vote_weight, cur_ann_size * sizeof(float));
+
+		cudaMemcpy(copy_Ndata_C1, Ndata_C1, cur_num_a * sizeof(float), cudaMemcpyDeviceToDevice);
+
+		avg_vote_bds_a << <cur_blocksPerGrid_a, cur_threadsPerBlock_a >> >(ann_device, data_S1[curr_layer], vote_Ndata_C1, vote_weight, params_device_ab, 1.f);
+		avg_vote_bds_b << <cur_blocksPerGrid_b, cur_threadsPerBlock_b >> >(bnn_device, data_S1[curr_layer], vote_Ndata_C1, vote_weight, params_device_ab, bds_wgt);
+		avg_vote_bds << <cur_blocksPerGrid_a, cur_threadsPerBlock_a >> >(vote_Ndata_C1, vote_weight, params_device_ab);
+
+		if (data_C_size[curr_layer].channel <= 3)
+		{
+			norm1(Ndata_C1, vote_Ndata_C1, response_C1, data_C_size[curr_layer]);
 		}
 		else
 		{
-			patchmatch_single << <cur_blocksPerGrid_b, cur_threadsPerBlock_b >> >(Ndata_S1, Ndata_C1, NULL, bnn_device, bnnd_device, params_device_ba);
-
-			cudaMemcpy(ann_err_host, annd_device, cur_ann_size * sizeof(float), cudaMemcpyDeviceToHost);
-			cudaMemcpy(ann_flow_host, ann_device, cur_ann_size * sizeof(unsigned int), cudaMemcpyDeviceToHost);
-			cudaMemcpy(bnn_flow_host, bnn_device, cur_bnn_size * sizeof(unsigned int), cudaMemcpyDeviceToHost);
-			cudaMemcpy(bnn_err_host, bnnd_device, cur_bnn_size * sizeof(float), cudaMemcpyDeviceToHost);
-
-			smlRes = reconstruct_bds(down_cnt, down_stl, ann_flow_host, bnn_flow_host, patch_size, 1.f, bds_wgt);
-
-			float *vote_Ndata_C1;
-			float *vote_weight;
-			float *copy_Ndata_C1;
-
-			cudaMalloc(&vote_Ndata_C1, cur_num_a * sizeof(float));
-			cudaMalloc(&copy_Ndata_C1, cur_num_a * sizeof(float));
-			cudaMalloc(&vote_weight, cur_ann_size * sizeof(float));
-
-			cudaMemcpy(copy_Ndata_C1, Ndata_C1, cur_num_a * sizeof(float), cudaMemcpyDeviceToDevice);
-
-			avg_vote_bds_a << <cur_blocksPerGrid_a, cur_threadsPerBlock_a >> >(ann_device, data_S1[curr_layer], vote_Ndata_C1, vote_weight, params_device_ab, 1.f);
-			avg_vote_bds_b << <cur_blocksPerGrid_b, cur_threadsPerBlock_b >> >(bnn_device, data_S1[curr_layer], vote_Ndata_C1, vote_weight, params_device_ab, bds_wgt);
-			avg_vote_bds << <cur_blocksPerGrid_a, cur_threadsPerBlock_a >> >(vote_Ndata_C1, vote_weight, params_device_ab);
-
-			if (data_C_size[curr_layer].channel <= 3)
-			{
-				norm1(Ndata_C1, vote_Ndata_C1, response_C1, data_C_size[curr_layer]);
-			}
-			else
-			{
-				norm(Ndata_C1, vote_Ndata_C1, response_C1, data_C_size[curr_layer]);
-			}
-
-			feature_distance << <cur_blocksPerGrid_a, cur_threadsPerBlock_a >> >(copy_Ndata_C1, Ndata_C1, annd_device, params_device_ab);
-			
-			cudaMemcpy(bds_err_host, annd_device, cur_ann_size * sizeof(float), cudaMemcpyDeviceToHost);
-
-			cudaFree(vote_Ndata_C1);
-			cudaFree(vote_weight);
-			cudaFree(copy_Ndata_C1);
+			norm(Ndata_C1, vote_Ndata_C1, response_C1, data_C_size[curr_layer]);
 		}
+
+		feature_distance << <cur_blocksPerGrid_a, cur_threadsPerBlock_a >> >(copy_Ndata_C1, Ndata_C1, annd_device, params_device_ab);
+			
+		cudaMemcpy(bds_err_host, annd_device, cur_ann_size * sizeof(float), cudaMemcpyDeviceToHost);
+
+		cudaFree(vote_Ndata_C1);
+		cudaFree(vote_weight);
+		cudaFree(copy_Ndata_C1);
 
 		cudaFree(Ndata_C1);
 		cudaFree(Ndata_S1);

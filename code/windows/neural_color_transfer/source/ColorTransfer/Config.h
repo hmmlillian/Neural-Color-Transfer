@@ -5,7 +5,6 @@
 #define MAX_SIZE           1000
 #define MIN_VAL            -(1e8)
 #define MAX_VAL            1e8
-#define ZERO_THRESH        1e-8
 //#define ENABLE_VIS
 
 #include <opencv2/core/core.hpp>
