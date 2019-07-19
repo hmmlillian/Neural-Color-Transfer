@@ -61,7 +61,7 @@ We prepare an example under the folder ```demo\``` with:
   ```  
 
 ### Run
-We provide pre-built executable files in folder ```demo\exe\```, please try them.
+We provide pre-built executable files [exe](https://drive.google.com/file/d/1r7zfDIU_S99hmWKpNXLxMDH-3iuCLSoQ/view?usp=sharing). Please download and unzip in folder ```demo\```, and try them.
 
 ### Tips
 - The proposed algorithm is more applicable to transfer color between images with semantically-related content.
