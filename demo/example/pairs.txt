@@ -1,0 +1,9 @@
+in/in0.png in/tar0.png 2.0
+in/in1.png in/tar1.png 2.0
+in/in2.png in/tar2.png 2.0
+in/in3.png in/tar3.png 2.0
+in/in4.png in/tar4.png 0.0
+in/in4.png in/tar4.png 1.0
+in/in4.png in/tar4.png 2.0
+in/in4.png in/tar4.png 4.0
+in/in4.png in/tar4.png 8.0
