@@ -229,9 +229,10 @@ void ColorTransfer::visualizeClusterRandom(Mat& visMat, const vector<vector<int>
 
 	for (int i = 0; i < colNum; ++i)
 	{
-		int r = rand() % 256;
-		int g = rand() % 256;
-		int b = rand() % 256;
+		int colVal = RandomColorList[i];
+		int r = colVal % 256;
+		int g = (colVal >> 8) % 256;
+		int b = (colVal >> 16) % 256;
 		Vec3b col(r, g, b);
 
 		for (int j = 0; j < indices[i].size(); ++j)
@@ -333,14 +334,19 @@ void ColorTransfer::getClusters(Mat& visMat, vector<vector<ClusterPixel>>& subCl
 	}
 
 #ifdef ENABLE_VIS
+	visMat = Mat::zeros(height, width, CV_8UC3);
 	for (int l = 0; l < m_labelNum; ++l)
 	{
-		visMat = Mat::zeros(height, width, CV_8UC3);
+		int col = RandomColorList[l];
+		int r = col % 256;
+		int g = (col >> 8) % 256;
+		int b = (col >> 16) % 256;
+
 		for (int i = 0; i < subClusterPixels[l].size(); ++i)
 		{
 			int x = subClusterPixels[l][i].id % width;
 			int y = subClusterPixels[l][i].id / width;
-			visMat.at<Vec3b>(y, x) = Vec3b(subClusterPixels[l][i].col[0], subClusterPixels[l][i].col[1], subClusterPixels[l][i].col[2]);
+			visMat.at<Vec3b>(y, x) = Vec3b(r, g, b);
 		}
 	}
 #endif
