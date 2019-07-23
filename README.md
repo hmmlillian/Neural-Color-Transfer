@@ -7,7 +7,7 @@ This is the implementation of single-reference color transfer proposed in the pa
 
 **Neural Color Transfer** is a progressive color transfer framework, which jointly optimizes dense semantic correspondencesin the deep feature domain and the local color transfer inthe image domain.
 
-![image](https://github.com/hmmlillian/Neural-Color-Transfer/blob/master/demo/intro.pdf)
+![image](https://github.com/hmmlillian/Neural-Color-Transfer/blob/master/intro.jpg)
 
 Given two input images (one color source image *S* and one color reference image) which share semantically-related content, but may vary dramatically in appearance or structure, the proposed framework first estimates dense correspondence between them using deep features (extracted from VGG19 at level *L*) and then applies local color transfer to the source image *S* based on the correspondence. The process repeats from high level (*L=5*) to low level (*L=1*).
 
